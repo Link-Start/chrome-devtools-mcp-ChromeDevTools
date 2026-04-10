@@ -23,6 +23,8 @@ describe('cli args parsing', () => {
     performanceCrux: true,
     'usage-statistics': true,
     usageStatistics: true,
+    'redact-network-headers': true,
+    redactNetworkHeaders: true,
   };
 
   it('parses with default args', async () => {
