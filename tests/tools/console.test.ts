@@ -25,7 +25,13 @@ import {
   getTextContent,
   withMcpContext,
   stabilizeStructuredContent,
+  extractExtensionId,
 } from '../utils.js';
+
+const EXTENSION_LOGGING_PATH = path.join(
+  import.meta.dirname,
+  '../../../tests/tools/fixtures/extension-logging',
+);
 
 describe('console', () => {
   before(async () => {
@@ -59,6 +65,16 @@ describe('console', () => {
 
         await context.triggerExtensionAction(extensionId);
         const worker = await swTarget.worker();
+
+        // On Windows, the service worker context might not be fully initialized
+        // with all global APIs yet.
+        await worker?.evaluate(`
+          (async () => {
+            while (typeof globalThis.setTimeout !== 'function') {
+              await new Promise(resolve => Promise.resolve().then(resolve));
+            }
+          })()
+        `);
 
         await worker?.evaluate(
           `
