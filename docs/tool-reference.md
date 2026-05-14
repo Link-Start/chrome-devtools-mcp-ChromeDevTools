@@ -1,7 +1,6 @@
 <!-- AUTO GENERATED DO NOT EDIT - run 'npm run gen' to update-->
 
 # Chrome DevTools MCP Tool Reference
-# Chrome DevTools MCP Tool Reference (~7005 cl100k_base tokens)
 
 - **[Input automation](#input-automation)** (10 tools)
   - [`click`](#click)
@@ -349,12 +348,12 @@ so returned values have to be JSON-serializable.
 **Parameters:**
 
 - **function** (string) **(required)**: A JavaScript function declaration to be executed by the tool in the currently selected page.
-Example without arguments: `() => {
+  Example without arguments: `() => {
   return document.title
 }` or `async () => {
   return await fetch("example.com")
 }`.
-Example with arguments: `(el) => {
+  Example with arguments: `(el) => {
   return el.innerText;
 }`
 
@@ -366,7 +365,7 @@ Example with arguments: `(el) => {
 
 ### `get_console_message`
 
-**Description:** Gets a console message by its ID. You can get all messages by calling .
+**Description:** Gets a console message by its ID. You can get all messages by calling [`list_console_messages`](#list_console_messages).
 
 **Parameters:**
 
@@ -395,6 +394,7 @@ Example with arguments: `(el) => {
 - **includePreservedMessages** (boolean) _(optional)_: Set to true to return the preserved messages over the last 3 navigations.
 - **pageIdx** (integer) _(optional)_: Page number to return (0-based). When omitted, returns the first page.
 - **pageSize** (integer) _(optional)_: Maximum number of messages to return. When omitted, returns all messages.
+- **serviceWorkerId** (string) _(optional)_: Filter messages to only return messages of the specified service worker.
 - **types** (array) _(optional)_: Filter messages to only return messages of the specified resource types. When omitted or empty, returns all messages.
 
 ---

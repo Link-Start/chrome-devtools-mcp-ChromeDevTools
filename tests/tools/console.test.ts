@@ -59,7 +59,6 @@ describe('console', () => {
         if (!sw) {
           assert.fail('Service worker not found in context list');
         }
-        const swId = context.getExtensionServiceWorkerId(sw);
 
         const response2 = new McpResponse({} as ParsedArguments);
 

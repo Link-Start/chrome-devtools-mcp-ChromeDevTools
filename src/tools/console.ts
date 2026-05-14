@@ -80,7 +80,9 @@ export const listConsoleMessages = definePageTool(cliArgs => {
       serviceWorkerId: zod
         .string()
         .optional()
-        .describe('Filter messages to only return messages of the specified service worker.'),
+        .describe(
+          'Filter messages to only return messages of the specified service worker.',
+        ),
     },
     blockedByDialog: false,
     verifyFilesSchema: [],
