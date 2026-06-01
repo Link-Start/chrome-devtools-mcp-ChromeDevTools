@@ -14,6 +14,7 @@ import type {ParsedArguments} from '../../src/bin/chrome-devtools-mcp-cli-option
 import {loadIssueDescriptions} from '../../src/issue-descriptions.js';
 import {McpResponse} from '../../src/McpResponse.js';
 import {TextSnapshot} from '../../src/TextSnapshot.js';
+import type {CdpWebWorker} from '../../src/third_party/index.js';
 import {DevTools} from '../../src/third_party/index.js';
 import {
   getConsoleMessage,
@@ -65,15 +66,33 @@ describe('console', () => {
         await context.triggerExtensionAction(extensionId);
         const worker = await swTarget.worker();
 
-        // On Windows, the service worker context might not be fully initialized
-        // with all global APIs yet.
-        await worker?.evaluate(`
-          (async () => {
-            while (typeof globalThis.setTimeout !== 'function') {
-              await new Promise(resolve => Promise.resolve().then(resolve));
-            }
-          })()
-        `);
+        // Puppeteer's waitForFunction injects a utility script that requires MutationObserver.
+        // Service Workers don't have it, so we stub it to allow the injection to succeed.
+        await worker?.evaluate(() => {
+          if (typeof globalThis.MutationObserver === 'undefined') {
+            // @ts-expect-error dummy MutationObserver
+            globalThis.MutationObserver = class {};
+          }
+        });
+
+        await (worker as unknown as CdpWebWorker)
+          .mainRealm()
+          .waitForFunction(() => typeof globalThis.setTimeout === 'function', {
+            polling: 100,
+          });
+
+        const errorPromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Timeout waiting for Service Worker error'));
+          }, 1000);
+          (worker as unknown as CdpWebWorker).client.on(
+            'Runtime.exceptionThrown',
+            () => {
+              clearTimeout(timeout);
+              resolve(undefined);
+            },
+          );
+        });
 
         await worker?.evaluate(
           `
@@ -85,9 +104,7 @@ describe('console', () => {
           `,
         );
 
-        // This is important to wait logs from extension.
-        await new Promise(resolve => setTimeout(resolve, 500));
-
+        await errorPromise;
         response2.resetResponseLineForTesting();
 
         await listConsoleMessages({
