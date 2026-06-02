@@ -57,9 +57,7 @@ describe('console', () => {
 
         const swList = await context.createExtensionServiceWorkersSnapshot();
         const sw = swList.find(s => s.target === swTarget);
-        if (!sw) {
-          assert.fail('Service worker not found in context list');
-        }
+        assert(sw, 'Service worker not found in context list');
 
         const response2 = new McpResponse({} as ParsedArguments);
 
@@ -93,16 +91,6 @@ describe('console', () => {
             },
           );
         });
-
-        await worker?.evaluate(
-          `
-            console.log('Service Worker starting...');
-            console.warn('This is a warning from Service Worker');
-            globalThis.setTimeout(() => {
-              throw new Error('Intentional error from Service Worker');
-            }, 100);
-          `,
-        );
 
         await errorPromise;
         response2.resetResponseLineForTesting();

@@ -48,10 +48,7 @@ export class ServiceWorkerSubscriber {
     if (this.#worker) {
       this.#worker.off('console', this.#onConsole);
     }
-    if (this.#session) {
-      this.#session.off('Runtime.exceptionThrown', this.#onExceptionThrown);
-      await this.#session.send('Runtime.disable');
-    }
+    await this.#session?.detach();
   }
 
   #onConsole = (message: ConsoleMessage) => {
