@@ -27,6 +27,8 @@ import {
   withMcpContext,
   stabilizeStructuredContent,
   extractExtensionId,
+  assertNoServiceWorkerReported,
+  waitExecutionFor,
 } from '../utils.js';
 
 const EXTENSION_LOGGING_PATH = path.join(
@@ -64,25 +66,19 @@ describe('console', () => {
         await context.triggerExtensionAction(extensionId);
         const worker = await swTarget.worker();
 
-        // Puppeteer's waitForFunction injects a utility script that requires MutationObserver.
-        // Service Workers don't have it, so we stub it to allow the injection to succeed.
-        await worker?.evaluate(() => {
-          if (typeof globalThis.MutationObserver === 'undefined') {
-            // @ts-expect-error dummy MutationObserver
-            globalThis.MutationObserver = class {};
-          }
-        });
-
-        await (worker as unknown as CdpWebWorker)
-          .mainRealm()
-          .waitForFunction(() => typeof globalThis.setTimeout === 'function', {
-            polling: 100,
+        const timeout = 10000;
+        waitExecutionFor(async () => {
+          await worker?.evaluate(() => {
+            if (typeof globalThis.setTimeout !== 'function') {
+              throw new Error('Not ready');
+            }
           });
+        }, timeout);
 
         const errorPromise = new Promise((resolve, reject) => {
           const timeout = setTimeout(() => {
             reject(new Error('Timeout waiting for Service Worker error'));
-          }, 1000);
+          }, 5000);
           (worker as unknown as CdpWebWorker).client.on(
             'Runtime.exceptionThrown',
             () => {
@@ -90,6 +86,12 @@ describe('console', () => {
               resolve(undefined);
             },
           );
+        });
+
+        worker?.evaluate(() => {
+          globalThis.setTimeout(() => {
+            throw new Error('Intentional error from Service Worker');
+          }, 100);
         });
 
         await errorPromise;
@@ -128,6 +130,10 @@ describe('console', () => {
           sanitizedText.includes('Intentional error from Service Worker'),
           'Should contain error log',
         );
+
+        await context.uninstallExtension(extensionId);
+        const targets = context.browser.targets();
+        assertNoServiceWorkerReported(targets, extensionId);
       },
       {},
       {

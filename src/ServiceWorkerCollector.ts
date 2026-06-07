@@ -100,7 +100,15 @@ export class ServiceWorkerConsoleCollector {
     this.#browser.off('targetcreated', this.#onTargetCreated);
     this.#browser.off('targetdestroyed', this.#onTargetDestroyed);
     for (const subscriber of this.#serviceWorkerSubscribers.values()) {
-      void subscriber.unsubscribe();
+      subscriber.unsubscribe().catch(err => {
+        if (
+          err instanceof Error &&
+          !err.message.includes('Target closed') &&
+          !err.message.includes('Session closed')
+        ) {
+          // Swallow error as we are tearing down the system
+        }
+      });
     }
     this.#serviceWorkerSubscribers.clear();
   }
@@ -120,7 +128,17 @@ export class ServiceWorkerConsoleCollector {
       const subscriber = new ServiceWorkerSubscriber(target, item => {
         this.addLog(extensionId, item);
       });
-      void subscriber.subscribe();
+      try {
+        await subscriber.subscribe();
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          !err.message.includes('Target closed') &&
+          !err.message.includes('Session closed')
+        ) {
+          throw err;
+        }
+      }
       this.#serviceWorkerSubscribers.set(target, subscriber);
     }
   };
@@ -128,7 +146,17 @@ export class ServiceWorkerConsoleCollector {
   #onTargetDestroyed = async (target: Target) => {
     const subscriber = this.#serviceWorkerSubscribers.get(target);
     if (subscriber) {
-      void subscriber.unsubscribe();
+      try {
+        await subscriber.unsubscribe();
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          !err.message.includes('Target closed') &&
+          !err.message.includes('Session closed')
+        ) {
+          throw err;
+        }
+      }
       this.#serviceWorkerSubscribers.delete(target);
     }
   };
