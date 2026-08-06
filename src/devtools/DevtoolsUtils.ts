@@ -151,6 +151,11 @@ export async function createTargetUniverse(
     supportsEmulation: false,
   });
 
+  const setting = universe.settings.resolve(
+    DevTools.SourceMapManager.lazyLoadingSettingDescriptor,
+  );
+  setting.set(true);
+
   const connection = new PuppeteerDevToolsConnection(session);
 
   const targetManager = universe.context.get(DevTools.TargetManager);
