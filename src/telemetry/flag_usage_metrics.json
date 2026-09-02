@@ -401,5 +401,37 @@
   {
     "name": "experimental_screencast_fps_present",
     "flagType": "boolean"
+  },
+  {
+    "name": "category_input_present",
+    "flagType": "boolean"
+  },
+  {
+    "name": "category_input",
+    "flagType": "boolean"
+  },
+  {
+    "name": "category_navigation_present",
+    "flagType": "boolean"
+  },
+  {
+    "name": "category_navigation",
+    "flagType": "boolean"
+  },
+  {
+    "name": "category_debugging_present",
+    "flagType": "boolean"
+  },
+  {
+    "name": "category_debugging",
+    "flagType": "boolean"
+  },
+  {
+    "name": "category_memory_present",
+    "flagType": "boolean"
+  },
+  {
+    "name": "category_memory",
+    "flagType": "boolean"
   }
 ]
